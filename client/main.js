@@ -2,24 +2,36 @@ Moralis.initialize("DczXAfeIPRD026nJPsGKZNecQluiI7JwsXMwhPtE"); // Application i
 Moralis.serverURL = "https://ehrhdrctvbal.moralis.io:2053/server"; //Server url from moralis.io
 
 const CONTRACT_ADDRESS = "0x0B0aa55e4CF8371D43193f120eB68AB5552cb7F5";
-const SHIB_ADDRESS = "0x6258D3497B01A273620Ed138d4F214661a283Eb4";
-const SHIB_SUPPLY = 1000000000000000;
 
 async function init() {
+
+    Moralis.Web3.getSigningData = () => 'Connect Metamask to DecPort'
+
     try {
         let user = Moralis.User.current();
-        if(!user){
+
+        if(user.authenticated() && ethereum.selectedAddress) {
+            hideLoginButton();
+        } else {
             $("#login_button").click(async () => {
                 user = await Moralis.Web3.authenticate();
+                if(user) {
+                    hideLoginButton();
+                }
             })
         }
-        renderGame();
+        render();
     } catch (error) {
         console.log(error);
     }
 }
 
-async function renderGame(){
+function hideLoginButton(){
+    $("#login_button").hide();
+    $("#address").html(ethereum.selectedAddress);
+}
+
+async function render(){
    
 }
 

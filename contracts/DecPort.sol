@@ -6,4 +6,8 @@ contract DecPort {
 
     }
 
+    function createPortfolio() public {
+        
+    }
+
 }
