@@ -4,7 +4,7 @@ library PortfolioUtils {
 
     struct Share {
         address tokenAddress; // address of the token
-        uint share;           // share of the token in %
+        uint16 share;           // share of the token in %
     }
 
 }
