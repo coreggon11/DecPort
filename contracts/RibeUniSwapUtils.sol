@@ -3,9 +3,7 @@ pragma solidity >=0.6.6;
 import '@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 
-contract LiquidityValueCalculator {
-
-    using SafeMath for uint;
+contract RibeUniSwapUtils {
 
     address public factory;
     address public wethAddress;

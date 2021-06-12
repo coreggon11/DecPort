@@ -3,7 +3,7 @@ const WETH = artifacts.require("WrappedEther");
 const USDT = artifacts.require("USDTether");
 const RANDOM = artifacts.require("RandomToken");
 
-const LVC = artifacts.require("LiquidityValueCalculator");
+const RibeUniSwapUtils = artifacts.require("RibeUniSwapUtils");
 
 const uniswapJson = require("@uniswap/v2-core/build/UniswapV2Factory.json");
 const contract = require("@truffle/contract");
@@ -37,9 +37,9 @@ module.exports = async function (deployer, network, accounts) {
   const randomToken = await RANDOM.deployed();
   const randomAddress = randomToken['address'];
   
-  // deploy liquidity value calculator
-  await deployer.deploy(LVC, factoryAddress, wethAddress, usdtAddress);
-  const liquidityValueCalculator = await LVC.deployed();
+  // deploy RibeUniSwapUtils
+  await deployer.deploy(RibeUniSwapUtils, factoryAddress, wethAddress, usdtAddress);
+  const ribeUniSwapUtils = await RibeUniSwapUtils.deployed();
 
   // deploy router
   await deployer.deploy(UniSwapRouter, factoryAddress, wethAddress, {from : accounts[0]});
@@ -75,13 +75,13 @@ module.exports = async function (deployer, network, accounts) {
 
   // check prices
   // get ether price
-  const etherPrice = await liquidityValueCalculator.ethPrice();
+  const etherPrice = await ribeUniSwapUtils.ethPrice();
   console.log(etherPrice / 10000);
   // token price 
-  const tokenPriceEther = await liquidityValueCalculator.tokenPriceInEther(randomAddress, {from : accounts[0]});
+  const tokenPriceEther = await ribeUniSwapUtils.tokenPriceInEther(randomAddress, {from : accounts[0]});
   console.log(tokenPriceEther / 1000000000000000000);
   // token price usdt
-  const tokenPriceUsdt = await liquidityValueCalculator.tokenPriceInUsdt(randomAddress, {from : accounts[0]});
+  const tokenPriceUsdt = await ribeUniSwapUtils.tokenPriceInUsdt(randomAddress, {from : accounts[0]});
   console.log(tokenPriceUsdt / 10000000000000000000000);
 
   // deploy riba dec port contract
