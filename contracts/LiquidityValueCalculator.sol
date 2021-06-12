@@ -25,12 +25,14 @@ contract LiquidityValueCalculator {
     }
 
     function tokenPriceInEther(address tokenAddress) public view returns (uint) {
-        (uint tokenReserve, uint wEthReserve, uint supply) = pairInfo(tokenAddress, wethAddress);
+        (uint tokenReserve, uint wEthReserve,) = pairInfo(tokenAddress, wethAddress);
+        require(tokenReserve > 0, "No token reserves");
         return wEthReserve / tokenReserve;
     }
 
     function ethPrice() public view returns (uint) {
-        (uint usdtReserve, uint wEthReserve, uint supply) = pairInfo(usdtAddress, wethAddress);
+        (uint usdtReserve, uint wEthReserve,) = pairInfo(usdtAddress, wethAddress);
+        require(wEthReserve > 0, "No weth reserves");
         return usdtReserve / wEthReserve;
     }
 
