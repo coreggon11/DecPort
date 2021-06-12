@@ -24,16 +24,23 @@ contract LiquidityValueCalculator {
         (reserveA, reserveB) = tokenA == pair.token0() ? (reserves0, reserves1) : (reserves1, reserves0);
     }
 
+    // return token price in ether with 18 floating numbers precision
     function tokenPriceInEther(address tokenAddress) public view returns (uint) {
         (uint tokenReserve, uint wEthReserve,) = pairInfo(tokenAddress, wethAddress);
         require(tokenReserve > 0, "No token reserves");
-        return wEthReserve / tokenReserve;
+        return (wEthReserve * 10 ** 18) / tokenReserve;
     }
 
+    // return token price in usdt with 22 floating numbers precision
+    function tokenPriceInUsdt(address tokenAddress) public view returns (uint) {
+        return tokenPriceInEther(tokenAddress) * ethPrice();
+    }
+
+    // return ether price in USDT with 4 floating numbers precision
     function ethPrice() public view returns (uint) {
         (uint usdtReserve, uint wEthReserve,) = pairInfo(usdtAddress, wethAddress);
         require(wEthReserve > 0, "No weth reserves");
-        return usdtReserve / wEthReserve;
+        return (usdtReserve * 10000) / wEthReserve;
     }
 
 }

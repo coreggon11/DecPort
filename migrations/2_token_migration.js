@@ -53,30 +53,36 @@ module.exports = async function (deployer, network, accounts) {
   const wethUsdtAddress = wethUsdtPair['logs'][0]['args']['pair']; 
 
   // approve weth
-  await wethToken.approve(routerAddress, 10000, {from : accounts[0]});
+  await wethToken.approve(routerAddress, 15000, {from : accounts[0]});
   // approve usdt
   await usdtToken.approve(routerAddress, 25000000, {from : accounts[0]});
+  // approve random
+  await randomToken.approve(routerAddress, 25000000, {from : accounts[0]});
 
   // add liquidity
- await router.addLiquidity(wethAddress, 
-    usdtAddress, 
-    10000, 
-    25000000,
-    10000, 
-    25000000, 
-    accounts[0],
-    Math.floor(Date.now() / 1000) + 25000, {from : accounts[0]});
-
-  // get ether price
-  const etherPrice = await liquidityValueCalculator.ethPrice();
-  console.log(etherPrice);
+ await router.addLiquidity(wethAddress, usdtAddress, 
+    /* how much ether */10000, /* how much usdt */ 25000000, /* how much ether min */ 10000, /* how much usdt min */ 25000000, 
+    accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
 
   // create ETHER - TOKEN pair
-  // TODO
+  const wethRandomPair = await uniswapV2Factory.createPair(wethAddress, randomAddress, {from : accounts[0]});
+  const wethRandomAddress = wethRandomPair['logs'][0]['args']['pair']; 
 
   // add liquidity
+  await router.addLiquidity(wethAddress, randomAddress, 
+    /* how much ether */5000, /* how much random */ 25000000, /* how much ether min */ 5000, /* how much usdt min */ 25000000, 
+    accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
 
   // check prices
+  // get ether price
+  const etherPrice = await liquidityValueCalculator.ethPrice();
+  console.log(etherPrice / 10000);
+  // token price 
+  const tokenPriceEther = await liquidityValueCalculator.tokenPriceInEther(randomAddress, {from : accounts[0]});
+  console.log(tokenPriceEther / 1000000000000000000);
+  // token price usdt
+  const tokenPriceUsdt = await liquidityValueCalculator.tokenPriceInUsdt(randomAddress, {from : accounts[0]});
+  console.log(tokenPriceUsdt / 10000000000000000000000);
 
   // deploy riba dec port contract
   await deployer.deploy(Ribe);
