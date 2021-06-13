@@ -107,12 +107,15 @@ module.exports = async function (deployer, network, accounts) {
   const ribe = await Ribe.deployed();
 
   const addresses = [wethAddress, covid19Address, sarsAddress];
-  const shares = [4000, 2000, 2000];
+  const shares = [6000, 2000, 2000];
+
   // create portfolio with WETH, Sars and Covid token
   // public dynamic
   await ribe.createPortfolio(true, false, addresses, shares, {from : accounts[0]});
-  const portfolioCount = await ribe.getPortfolioCount();
-  console.log(portfolioCount / 1);
+  console.log(await ribe.getPortfolioCount() / 1);
+
+  const portfolios = await ribe.getUserPortfolios(accounts[0]);
+  console.log(portfolios);
   // TODO invest USDT portfolio
   // TODO not owner invest in portfolio
   
