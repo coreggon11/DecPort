@@ -32,11 +32,16 @@ module.exports = async function (deployer, network, accounts) {
   const usdtToken = await USDT.deployed();
   const usdtAddress = usdtToken['address'];
   
-  // deploy TOKEN
-  await deployer.deploy(RANDOM);
-  const randomToken = await RANDOM.deployed();
-  const randomAddress = randomToken['address'];
+  // deploy Covid Token
+  await deployer.deploy(RANDOM, "Covid-19", "C19");
+  const covid19 = await RANDOM.deployed();
+  const covid19Address = covid19['address'];
   
+  // deploy Sars token
+  await deployer.deploy(RANDOM, "Sars-CoV 2", "SARS2");
+  const sars = await RANDOM.deployed();
+  const sarsAddress = sars['address'];
+
   // deploy RibeUniSwapUtils
   await deployer.deploy(RibeUniSwapUtils, factoryAddress, wethAddress, usdtAddress);
   const ribeUniSwapUtils = await RibeUniSwapUtils.deployed();
@@ -46,18 +51,20 @@ module.exports = async function (deployer, network, accounts) {
   const router = await UniSwapRouter.deployed();
   const routerAddress = router['address'];
 
+  // approve weth
+  await wethToken.approve(routerAddress, 17500, {from : accounts[0]});
+  // approve usdt
+  await usdtToken.approve(routerAddress, 25000000, {from : accounts[0]});
+  // approve covid
+  await covid19.approve(routerAddress, 25000000, {from : accounts[0]});
+  // approve sars
+  await sars.approve(routerAddress, 25000000, {from : accounts[0]});
+
   // create pairs
   
   // create ETHER - USDT pair
   const wethUsdtPair = await uniswapV2Factory.createPair(wethAddress, usdtAddress, {from : accounts[0]});
   const wethUsdtAddress = wethUsdtPair['logs'][0]['args']['pair']; 
-
-  // approve weth
-  await wethToken.approve(routerAddress, 15000, {from : accounts[0]});
-  // approve usdt
-  await usdtToken.approve(routerAddress, 25000000, {from : accounts[0]});
-  // approve random
-  await randomToken.approve(routerAddress, 25000000, {from : accounts[0]});
 
   // add liquidity
  await router.addLiquidity(wethAddress, usdtAddress, 
@@ -65,12 +72,20 @@ module.exports = async function (deployer, network, accounts) {
     accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
 
   // create ETHER - TOKEN pair
-  const wethRandomPair = await uniswapV2Factory.createPair(wethAddress, randomAddress, {from : accounts[0]});
-  const wethRandomAddress = wethRandomPair['logs'][0]['args']['pair']; 
+  const wethCoivdPair = await uniswapV2Factory.createPair(wethAddress, covid19Address, {from : accounts[0]});
+  //const wethRandomAddress = wethRandomPair['logs'][0]['args']['pair']; 
 
   // add liquidity
-  await router.addLiquidity(wethAddress, randomAddress, 
+  await router.addLiquidity(wethAddress, covid19Address, 
     /* how much ether */5000, /* how much random */ 25000000, /* how much ether min */ 5000, /* how much usdt min */ 25000000, 
+    accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
+
+  // create ETHER - TOKEN pair
+  const wethSarsPair = await uniswapV2Factory.createPair(wethAddress, sarsAddress, {from : accounts[0]});
+
+  // add liquidity
+  await router.addLiquidity(wethAddress, sarsAddress, 
+    /* how much ether */2500, /* how much random */ 25000000, /* how much ether min */ 5000, /* how much usdt min */ 25000000, 
     accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
 
   // check prices
@@ -78,13 +93,24 @@ module.exports = async function (deployer, network, accounts) {
   const etherPrice = await ribeUniSwapUtils.ethPrice();
   console.log(etherPrice / 10000);
   // token price 
-  const tokenPriceEther = await ribeUniSwapUtils.tokenPriceInEther(randomAddress, {from : accounts[0]});
+  const tokenPriceEther = await ribeUniSwapUtils.tokenPriceInEther(covid19Address, {from : accounts[0]});
   console.log(tokenPriceEther / 1000000000000000000);
   // token price usdt
-  const tokenPriceUsdt = await ribeUniSwapUtils.tokenPriceInUsdt(randomAddress, {from : accounts[0]});
+  const tokenPriceUsdt = await ribeUniSwapUtils.tokenPriceInUsdt(covid19Address, {from : accounts[0]});
   console.log(tokenPriceUsdt / 10000000000000000000000);
+
+  console.log("account 0: " + accounts[0]);
+  console.log("account 1: " + accounts[1]);
 
   // deploy riba dec port contract
   await deployer.deploy(Ribe);
-  let tokenInstance = await Ribe.deployed();
+  const ribe = await Ribe.deployed();
+
+  // create portfolio with WETH, Sars and Covid token
+  // TODO public static
+  // TODO private static
+  // TODO public dynamic
+  // TODO private dynamic
+
+  // invest USDT portfolio
 };
