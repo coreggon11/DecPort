@@ -113,12 +113,21 @@ module.exports = async function (deployer, network, accounts) {
   await ribe.createPortfolio(true, false, addresses, shares, {from : accounts[0]});
   const portfolioCount = await ribe.getPortfolioCount();
   console.log(portfolioCount / 1);
+  // TODO invest USDT portfolio
+  // TODO not owner invest in portfolio
+  
   // TODO public static
   //ribe.createPortfolio(bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_)
+  // TODO invest USDT portfolio
+  // TODO not owner invest in portfolio
+
   // TODO private dynamic
   //ribe.createPortfolio(bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_)
+  // TODO invest USDT portfolio
+  // TODO not owner invest in portfolio
+
   // TODO private static
   //ribe.createPortfolio(bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_)
-
-  // invest USDT portfolio
+  // TODO invest USDT portfolio
+  // TODO not owner invest in portfolio
 };
