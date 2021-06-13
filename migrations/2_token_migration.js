@@ -64,7 +64,7 @@ module.exports = async function (deployer, network, accounts) {
   
   // create ETHER - USDT pair
   const wethUsdtPair = await uniswapV2Factory.createPair(wethAddress, usdtAddress, {from : accounts[0]});
-  const wethUsdtAddress = wethUsdtPair['logs'][0]['args']['pair']; 
+  //const wethUsdtAddress = wethUsdtPair['logs'][0]['args']['pair']; 
 
   // add liquidity
  await router.addLiquidity(wethAddress, usdtAddress, 
@@ -106,11 +106,19 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(Ribe);
   const ribe = await Ribe.deployed();
 
+  const addresses = [wethAddress, covid19Address, sarsAddress];
+  const shares = [4000, 2000, 2000];
   // create portfolio with WETH, Sars and Covid token
+  // public dynamic
+  await ribe.createPortfolio(true, false, addresses, shares, {from : accounts[0]});
+  const portfolioCount = await ribe.getPortfolioCount();
+  console.log(portfolioCount / 1);
   // TODO public static
-  // TODO private static
-  // TODO public dynamic
+  //ribe.createPortfolio(bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_)
   // TODO private dynamic
+  //ribe.createPortfolio(bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_)
+  // TODO private static
+  //ribe.createPortfolio(bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_)
 
   // invest USDT portfolio
 };
