@@ -2,15 +2,18 @@ pragma solidity >=0.6.6;
 
 import '@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract RibeUniSwapUtils {
 
     address public factory;
+    address public routerAddress;
     address public wethAddress;
     address public usdtAddress;
 
-    constructor(address factory_, address weth, address usdt) public {
+    constructor(address factory_, address routerAddress_, address weth, address usdt) public {
         factory = factory_;
+        routerAddress = routerAddress_;
         wethAddress = weth;
         usdtAddress = usdt;
     }
@@ -22,23 +25,17 @@ contract RibeUniSwapUtils {
         (reserveA, reserveB) = tokenA == pair.token0() ? (reserves0, reserves1) : (reserves1, reserves0);
     }
 
-    // return token price in ether with 18 floating numbers precision
-    function tokenPriceInEther(address tokenAddress) public view returns (uint) {
-        (uint tokenReserve, uint wEthReserve,) = pairInfo(tokenAddress, wethAddress);
-        require(tokenReserve > 0, "No token reserves");
-        return (wEthReserve * 10 ** 18) / tokenReserve;
+    // how much eth I get for 1 token
+    function tokenPriceEther(address tokenAddress) public view returns (uint) {
+        (uint reserveToken, uint reserveWeth, ) = pairInfo(tokenAddress, wethAddress);
+        ERC20 theToken = ERC20(tokenAddress);
+        return UniswapV2Library.getAmountOut(10 ** theToken.decimals(), reserveToken, reserveWeth);
     }
 
-    // return token price in usdt with 22 floating numbers precision
-    function tokenPriceInUsdt(address tokenAddress) public view returns (uint) {
-        return tokenPriceInEther(tokenAddress) * ethPrice();
-    }
-
-    // return ether price in USDT with 4 floating numbers precision
+    // return ether price in usdt
     function ethPrice() public view returns (uint) {
-        (uint usdtReserve, uint wEthReserve,) = pairInfo(usdtAddress, wethAddress);
-        require(wEthReserve > 0, "No weth reserves");
-        return (usdtReserve * 10000) / wEthReserve;
+        (uint reserveUsd, uint reserveWeth, ) = pairInfo(usdtAddress, wethAddress);
+        return UniswapV2Library.getAmountOut(10 ** 18, reserveWeth, reserveUsd);
     }
 
 }

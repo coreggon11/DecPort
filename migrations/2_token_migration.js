@@ -1,4 +1,5 @@
-const Ribe = artifacts.require("Ribe");
+const RibeProtcol = artifacts.require("RibeProtcol");
+const RibeUtils = artifacts.require("RibeUtils");
 const WETH = artifacts.require("WrappedEther");
 const USDT = artifacts.require("USDTether");
 const RANDOM = artifacts.require("RandomToken");
@@ -10,11 +11,15 @@ const contract = require("@truffle/contract");
 const UniSwap = contract(uniswapJson);
 UniSwap.setProvider(this.web3._provider);
 
-const uniswapRouterJson = require("@uniswap/v2-periphery/build/UniswapV2Router01.json");
+const uniswapRouterJson = require("@uniswap/v2-periphery/build/UniswapV2Router02.json");
 const UniSwapRouter = contract(uniswapRouterJson);
 UniSwapRouter.setProvider(this.web3._provider);
 
 module.exports = async function (deployer, network, accounts) {
+  // deploy ribe utils
+  await deployer.deploy(RibeUtils);
+  await deployer.link(RibeUtils, RibeProtcol);
+
   // deploy uniswap
   await deployer.deploy(UniSwap, accounts[0], {from : accounts[0]});
   const uniswapV2Factory = await UniSwap.deployed();
@@ -42,23 +47,24 @@ module.exports = async function (deployer, network, accounts) {
   const sars = await RANDOM.deployed();
   const sarsAddress = sars['address'];
 
-  // deploy RibeUniSwapUtils
-  await deployer.deploy(RibeUniSwapUtils, factoryAddress, wethAddress, usdtAddress);
-  const ribeUniSwapUtils = await RibeUniSwapUtils.deployed();
-
   // deploy router
   await deployer.deploy(UniSwapRouter, factoryAddress, wethAddress, {from : accounts[0]});
   const router = await UniSwapRouter.deployed();
   const routerAddress = router['address'];
 
+  // deploy RibeUniSwapUtils
+  await deployer.deploy(RibeUniSwapUtils, factoryAddress, routerAddress, wethAddress, usdtAddress);
+  const ribeUniSwapUtils = await RibeUniSwapUtils.deployed();
+  const ribeUniswapUtilsAddress = ribeUniSwapUtils['address'];
+
   // approve weth
-  await wethToken.approve(routerAddress, 17500, {from : accounts[0]});
+  await wethToken.approve(routerAddress, '1000000000000000000000000', {from : accounts[0]});
   // approve usdt
-  await usdtToken.approve(routerAddress, 25000000, {from : accounts[0]});
+  await usdtToken.approve(routerAddress, '2500000000000000', {from : accounts[0]});
   // approve covid
-  await covid19.approve(routerAddress, 25000000, {from : accounts[0]});
+  await covid19.approve(routerAddress, '5000000000000000000000000000', {from : accounts[0]});
   // approve sars
-  await sars.approve(routerAddress, 25000000, {from : accounts[0]});
+  await sars.approve(routerAddress, '5000000000000000000000000000', {from : accounts[0]});
 
   // create pairs
   
@@ -66,9 +72,12 @@ module.exports = async function (deployer, network, accounts) {
   const wethUsdtPair = await uniswapV2Factory.createPair(wethAddress, usdtAddress, {from : accounts[0]});
   //const wethUsdtAddress = wethUsdtPair['logs'][0]['args']['pair']; 
 
+  const decimals = '000000000000000000';
+  const sixDecimals = '000000';
+
   // add liquidity
  await router.addLiquidity(wethAddress, usdtAddress, 
-    /* how much ether */10000, /* how much usdt */ 25000000, /* how much ether min */ 10000, /* how much usdt min */ 25000000, 
+    /* how much ether */10000 + decimals, /* how much usdt */ 25000000 + sixDecimals, /* how much ether min */ 10000 + decimals, /* how much usdt min */ 25000000 + sixDecimals, 
     accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
 
   // create ETHER - TOKEN pair
@@ -77,7 +86,7 @@ module.exports = async function (deployer, network, accounts) {
 
   // add liquidity
   await router.addLiquidity(wethAddress, covid19Address, 
-    /* how much ether */5000, /* how much random */ 25000000, /* how much ether min */ 5000, /* how much usdt min */ 25000000, 
+    /* how much ether */5000 + decimals, /* how much random */ 25000000 + decimals, /* how much ether min */ 5000 + decimals, /* how much usdt min */ 25000000 + decimals, 
     accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
 
   // create ETHER - TOKEN pair
@@ -85,36 +94,39 @@ module.exports = async function (deployer, network, accounts) {
 
   // add liquidity
   await router.addLiquidity(wethAddress, sarsAddress, 
-    /* how much ether */2500, /* how much random */ 25000000, /* how much ether min */ 5000, /* how much usdt min */ 25000000, 
+    /* how much ether */2500 + decimals, /* how much random */ 25000000 + decimals, /* how much ether min */ 2500 + decimals, /* how much usdt min */ 25000000 + decimals, 
     accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
+
+  const eightteenDecimalsInt = 1000000000000000000
+  const sixDecimalsInt = 1000000
 
   // check prices
   // get ether price
   const etherPrice = await ribeUniSwapUtils.ethPrice();
-  console.log(etherPrice / 10000);
+  console.log('Ether price: ' + etherPrice / sixDecimalsInt);
   // token price 
-  const tokenPriceEther = await ribeUniSwapUtils.tokenPriceInEther(covid19Address, {from : accounts[0]});
-  console.log(tokenPriceEther / 1000000000000000000);
+  const tokenPriceEther = await ribeUniSwapUtils.tokenPriceEther(covid19Address, {from : accounts[0]});
+  console.log("Token price in ether: " + tokenPriceEther / eightteenDecimalsInt); 
   // token price usdt
-  const tokenPriceUsdt = await ribeUniSwapUtils.tokenPriceInUsdt(covid19Address, {from : accounts[0]});
-  console.log(tokenPriceUsdt / 10000000000000000000000);
+  const tokenPriceUsdt = ((tokenPriceEther / eightteenDecimalsInt) * (etherPrice / sixDecimalsInt));
+  console.log("Token price in usdt: " + tokenPriceUsdt); 
 
   console.log("account 0: " + accounts[0]);
   console.log("account 1: " + accounts[1]);
 
   // deploy riba dec port contract
-  await deployer.deploy(Ribe);
-  const ribe = await Ribe.deployed();
+  await deployer.deploy(RibeProtcol, ribeUniswapUtilsAddress);
+  const ribeProtocol = await RibeProtcol.deployed();
 
   const addresses = [wethAddress, covid19Address, sarsAddress];
   const shares = [6000, 2000, 2000];
 
   // create portfolio with WETH, Sars and Covid token
   // public dynamic
-  await ribe.createPortfolio(true, false, addresses, shares, {from : accounts[0]});
-  console.log(await ribe.getPortfolioCount() / 1);
+  await ribeProtocol.createPortfolio(true, false, addresses, shares, {from : accounts[0]});
+  console.log(await ribeProtocol.getPortfolioCount() / 1);
 
-  const portfolios = await ribe.getUserPortfolios(accounts[0]);
+  const portfolios = await ribeProtocol.getUserPortfolios(accounts[0]);
   console.log(portfolios);
   // TODO invest USDT portfolio
   // TODO not owner invest in portfolio

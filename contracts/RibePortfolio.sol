@@ -22,6 +22,10 @@ contract RibePortfolio is Ownable {
         }
     }
 
+    function invest(address investor) public {
+        require(canInvest(investor), "Ribe Protocol: User can not invest in this portfolio!");
+    }
+
     function canInvest(address investor) public view returns (bool) {
         return investor == owner() || isPublic;
     }

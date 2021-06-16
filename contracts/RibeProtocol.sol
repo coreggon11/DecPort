@@ -1,17 +1,19 @@
-pragma solidity >=0.6.6;
+pragma solidity ^0.8.0;
 
 import "./RibePortfolio.sol";
 import "./RibeUtils.sol";
 
-contract Ribe {
+contract RibeProtcol {
 
     using RibeUtils for uint16[];
 
     mapping (address => RibePortfolio[]) private portfolios;
     uint private portfolioCount;
 
-    constructor () public {
+    address private ribeUniswapUtilsAddress;
 
+    constructor (address ribeUniswapUtilsAddress_) {
+        ribeUniswapUtilsAddress = ribeUniswapUtilsAddress_;
     }
 
     function createPortfolio(bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_) public {
@@ -25,11 +27,11 @@ contract Ribe {
         return portfolios[user];
     }
 
-    function investUsdt(address portfolio) public {
-        // what portfolio? portfolio
-        // who? msg.sender
+    function investUsdt(address portfolioAddress) public {
+        RibePortfolio portfolio = RibePortfolio(portfolioAddress);
+        require(portfolio.canInvest(msg.sender), "Ribe Protcol: User can not invest in this portfolio!");
         // transfer usdt to weth
-        //
+        // transfer weth to portfolio
     }
 
     function getPortfolioCount() public view returns (uint) {

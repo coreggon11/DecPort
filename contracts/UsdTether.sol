@@ -8,4 +8,8 @@ contract UsdTether is ERC20 {
         _mint(msg.sender, 2500000000 * 10 ** decimals());
     }
 
+    function decimals() public view virtual override returns (uint8) {
+        return 6;
+    }
+
 }
