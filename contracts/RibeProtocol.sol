@@ -1,5 +1,8 @@
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import "./RibeUtils.sol";
 import "./RibePortfolio.sol";
 import "./RibeUtils.sol";
 
@@ -27,10 +30,13 @@ contract RibeProtcol {
         return portfolios[user];
     }
 
-    function investDai(address portfolioAddress) public {
+    function investDai(address portfolioAddress, uint amountDai) public {
         RibePortfolio portfolio = RibePortfolio(portfolioAddress);
         require(portfolio.canInvest(msg.sender), "Ribe Protcol: User can not invest in this portfolio!");
-        // transfer usdt to weth
+        
+        //IERC20 dai = IERC20(ribeUniswapUtilsAdd);
+        //require();
+        // transfer dai to weth
         // transfer weth to portfolio
     }
 

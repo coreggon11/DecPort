@@ -18,6 +18,10 @@ contract RibeUniSwapUtils {
         daiAddress = dai;
     }
 
+    function getDaiAddress() public view returns (address) {
+        return daiAddress;
+    }
+
     function pairInfo(address tokenA, address tokenB) internal view returns (uint reserveA, uint reserveB, uint totalSupply) {
         IUniswapV2Pair pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, tokenA, tokenB));
         totalSupply = pair.totalSupply();

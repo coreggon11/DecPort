@@ -16,10 +16,6 @@ const UniSwapRouter = contract(uniswapRouterJson);
 UniSwapRouter.setProvider(this.web3._provider);
 
 module.exports = async function (deployer, network, accounts) {
-  // deploy ribe utils
-  await deployer.deploy(RibeUtils);
-  await deployer.link(RibeUtils, RibeProtcol);
-
   // deploy uniswap
   await deployer.deploy(UniSwap, accounts[0], {from : accounts[0]});
   const uniswapV2Factory = await UniSwap.deployed();
