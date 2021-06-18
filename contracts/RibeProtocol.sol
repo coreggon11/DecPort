@@ -27,7 +27,7 @@ contract RibeProtcol {
         return portfolios[user];
     }
 
-    function investUsdt(address portfolioAddress) public {
+    function investDai(address portfolioAddress) public {
         RibePortfolio portfolio = RibePortfolio(portfolioAddress);
         require(portfolio.canInvest(msg.sender), "Ribe Protcol: User can not invest in this portfolio!");
         // transfer usdt to weth

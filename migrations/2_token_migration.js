@@ -1,7 +1,7 @@
 const RibeProtcol = artifacts.require("RibeProtcol");
 const RibeUtils = artifacts.require("RibeUtils");
 const WETH = artifacts.require("WrappedEther");
-const USDT = artifacts.require("USDTether");
+const DAI = artifacts.require("DAI");
 const RANDOM = artifacts.require("RandomToken");
 
 const RibeUniSwapUtils = artifacts.require("RibeUniSwapUtils");
@@ -32,10 +32,10 @@ module.exports = async function (deployer, network, accounts) {
   const wethToken = await WETH.deployed();
   const wethAddress = wethToken['address'];
 
-  // deploy USDT
-  await deployer.deploy(USDT);
-  const usdtToken = await USDT.deployed();
-  const usdtAddress = usdtToken['address'];
+  // deploy dai
+  await deployer.deploy(DAI);
+  const daiToken = await DAI.deployed();
+  const usdtAddress = daiToken['address'];
   
   // deploy Covid Token
   await deployer.deploy(RANDOM, "Covid-19", "C19");
@@ -60,7 +60,7 @@ module.exports = async function (deployer, network, accounts) {
   // approve weth
   await wethToken.approve(routerAddress, '1000000000000000000000000', {from : accounts[0]});
   // approve usdt
-  await usdtToken.approve(routerAddress, '2500000000000000', {from : accounts[0]});
+  await daiToken.approve(routerAddress, '2500000000000000000000000000', {from : accounts[0]});
   // approve covid
   await covid19.approve(routerAddress, '5000000000000000000000000000', {from : accounts[0]});
   // approve sars
@@ -70,19 +70,16 @@ module.exports = async function (deployer, network, accounts) {
   
   // create ETHER - USDT pair
   const wethUsdtPair = await uniswapV2Factory.createPair(wethAddress, usdtAddress, {from : accounts[0]});
-  //const wethUsdtAddress = wethUsdtPair['logs'][0]['args']['pair']; 
 
   const decimals = '000000000000000000';
-  const sixDecimals = '000000';
 
   // add liquidity
  await router.addLiquidity(wethAddress, usdtAddress, 
-    /* how much ether */10000 + decimals, /* how much usdt */ 25000000 + sixDecimals, /* how much ether min */ 10000 + decimals, /* how much usdt min */ 25000000 + sixDecimals, 
+    /* how much ether */10000 + decimals, /* how much usdt */ 25000000 + decimals, /* how much ether min */ 10000 + decimals, /* how much usdt min */ 25000000 + decimals, 
     accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
 
   // create ETHER - TOKEN pair
   const wethCoivdPair = await uniswapV2Factory.createPair(wethAddress, covid19Address, {from : accounts[0]});
-  //const wethRandomAddress = wethRandomPair['logs'][0]['args']['pair']; 
 
   // add liquidity
   await router.addLiquidity(wethAddress, covid19Address, 
@@ -98,18 +95,17 @@ module.exports = async function (deployer, network, accounts) {
     accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
 
   const eightteenDecimalsInt = 1000000000000000000
-  const sixDecimalsInt = 1000000
 
   // check prices
   // get ether price
   const etherPrice = await ribeUniSwapUtils.ethPrice();
-  console.log('Ether price: ' + etherPrice / sixDecimalsInt);
+  console.log('Ether price: ' + etherPrice / eightteenDecimalsInt);
   // token price 
   const tokenPriceEther = await ribeUniSwapUtils.tokenPriceEther(covid19Address, {from : accounts[0]});
   console.log("Token price in ether: " + tokenPriceEther / eightteenDecimalsInt); 
   // token price usdt
-  const tokenPriceUsdt = ((tokenPriceEther / eightteenDecimalsInt) * (etherPrice / sixDecimalsInt));
-  console.log("Token price in usdt: " + tokenPriceUsdt); 
+  const tokenPriceDai = ((tokenPriceEther / eightteenDecimalsInt) * (etherPrice / eightteenDecimalsInt));
+  console.log("Token price in DAI: " + tokenPriceDai); 
 
   console.log("account 0: " + accounts[0]);
   console.log("account 1: " + accounts[1]);

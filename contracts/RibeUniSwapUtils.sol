@@ -9,13 +9,13 @@ contract RibeUniSwapUtils {
     address public factory;
     address public routerAddress;
     address public wethAddress;
-    address public usdtAddress;
+    address public daiAddress;
 
-    constructor(address factory_, address routerAddress_, address weth, address usdt) public {
+    constructor(address factory_, address routerAddress_, address weth, address dai) public {
         factory = factory_;
         routerAddress = routerAddress_;
         wethAddress = weth;
-        usdtAddress = usdt;
+        daiAddress = dai;
     }
 
     function pairInfo(address tokenA, address tokenB) internal view returns (uint reserveA, uint reserveB, uint totalSupply) {
@@ -34,7 +34,7 @@ contract RibeUniSwapUtils {
 
     // return ether price in usdt
     function ethPrice() public view returns (uint) {
-        (uint reserveUsd, uint reserveWeth, ) = pairInfo(usdtAddress, wethAddress);
+        (uint reserveUsd, uint reserveWeth, ) = pairInfo(daiAddress, wethAddress);
         return UniswapV2Library.getAmountOut(10 ** 18, reserveWeth, reserveUsd);
     }
 
