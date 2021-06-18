@@ -1,5 +1,4 @@
 const RibeProtcol = artifacts.require("RibeProtcol");
-const RibeUtils = artifacts.require("RibeUtils");
 const WETH = artifacts.require("WrappedEther");
 const DAI = artifacts.require("DAI");
 const RANDOM = artifacts.require("RandomToken");
@@ -31,7 +30,7 @@ module.exports = async function (deployer, network, accounts) {
   // deploy dai
   await deployer.deploy(DAI);
   const daiToken = await DAI.deployed();
-  const usdtAddress = daiToken['address'];
+  const daiAddress = daiToken['address'];
   
   // deploy Covid Token
   await deployer.deploy(RANDOM, "Covid-19", "C19");
@@ -49,7 +48,7 @@ module.exports = async function (deployer, network, accounts) {
   const routerAddress = router['address'];
 
   // deploy RibeUniSwapUtils
-  await deployer.deploy(RibeUniSwapUtils, factoryAddress, routerAddress, wethAddress, usdtAddress);
+  await deployer.deploy(RibeUniSwapUtils, factoryAddress, routerAddress, wethAddress, daiAddress);
   const ribeUniSwapUtils = await RibeUniSwapUtils.deployed();
   const ribeUniswapUtilsAddress = ribeUniSwapUtils['address'];
 
@@ -65,12 +64,12 @@ module.exports = async function (deployer, network, accounts) {
   // create pairs
   
   // create ETHER - USDT pair
-  const wethUsdtPair = await uniswapV2Factory.createPair(wethAddress, usdtAddress, {from : accounts[0]});
+  const wethUsdtPair = await uniswapV2Factory.createPair(wethAddress, daiAddress, {from : accounts[0]});
 
   const decimals = '000000000000000000';
 
   // add liquidity
- await router.addLiquidity(wethAddress, usdtAddress, 
+ await router.addLiquidity(wethAddress, daiAddress, 
     /* how much ether */10000 + decimals, /* how much usdt */ 25000000 + decimals, /* how much ether min */ 10000 + decimals, /* how much usdt min */ 25000000 + decimals, 
     accounts[0], /* wait max 30 min */ Math.floor(Date.now() / 1000) + 1800, {from : accounts[0]});
 
