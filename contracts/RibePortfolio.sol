@@ -4,7 +4,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
 
-import "./RibeUniSwapUtils.sol";
 import "./RibeUtils.sol";
 
 contract RibePortfolio is Ownable {
@@ -14,9 +13,6 @@ contract RibePortfolio is Ownable {
     bool private isPublic;
     bool private isDynamic;
     Share[] private shares;
-
-    address private ribeUniswapUtilsAddress;
-    RibeUniSwapUtils uniswapUtils = RibeUniSwapUtils(ribeUniswapUtilsAddress);
 
     modifier allowedInvestor(address investor) {
         require(canInvest(investor), "Ribe Protocol: User can not invest in this portfolio!");
@@ -28,21 +24,20 @@ contract RibePortfolio is Ownable {
         uint16 share;           // share of the token in %
     }
 
-    constructor (address ribeUniswapUtilsAddress_, bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_) Ownable() public {
+    constructor (bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_) Ownable() public {
         isPublic = isPublic_;
         isDynamic = isDynamic_;
-        ribeUniswapUtilsAddress = ribeUniswapUtilsAddress_;
         for(uint i = 0; i < addresses_.length; ++i) {
             shares.push(Share(addresses_[i], shares_[i]));
         }
     }
 
-    function investDai(address investor, uint amountDai, uint wethTransferred, address daiAddress)
+    function investDai(address investor, uint amountDai, uint wethTransferred)
         external allowedInvestor(investor) {
         if(isDynamic) {
-            investDaiDynamic(investor, amountDai, wethTransferred, daiAddress);
+            investDaiDynamic(investor, amountDai, wethTransferred);
         } else {
-            investDaiStatic(investor, amountDai, wethTransferred, daiAddress);
+            investDaiStatic(investor, amountDai, wethTransferred);
         }
     }
 
@@ -55,19 +50,19 @@ contract RibePortfolio is Ownable {
         }
     }
 
-    function investDaiStatic(address investor, uint amountDai, uint wethTransferred, address daiAddress) private {
+    function investDaiStatic(address investor, uint amountDai, uint wethTransferred) private {
         // dai is already here, we don't need to convert
-        uint sharesWithoutDai = RibeUtils.sub(10000, daiShare(daiAddress));
+        uint sharesWithoutDai = RibeUtils.sub(10000, daiShare());
         uint wethLeft = wethTransferred;
-        IERC20 weth = IERC20(uniswapUtils.wethAddress());
+        IERC20 weth = IERC20(RibeUtils.getWethAddress());
         // approve weth
-        weth.approve(uniswapUtils.routerAddress(), wethTransferred);
+        weth.approve(RibeUtils.getRouterAddress(), wethTransferred);
         for(uint i; i < shares.length; ++i) {
             uint shareOfWeth = (uint) (shares[i].share).percent(sharesWithoutDai);
             // actual share with dai
             uint wethToSwap = wethTransferred.percent(shareOfWeth);
             wethLeft = wethLeft.sub(wethToSwap);
-            if(shares[i].tokenAddress == uniswapUtils.wethAddress()){
+            if(shares[i].tokenAddress == RibeUtils.getWethAddress()){
                 // we do not need to swap weth obviously
                 continue;
             }
@@ -78,7 +73,7 @@ contract RibePortfolio is Ownable {
         // TODO send tokens to contract owner
     }
 
-    function investDaiDynamic(address investor, uint amountDai, uint wethTransferred, address daiAddress) private {
+    function investDaiDynamic(address investor, uint amountDai, uint wethTransferred) private {
         // TODO
     }
 
@@ -95,13 +90,13 @@ contract RibePortfolio is Ownable {
     this function returns how much of amountDai invested should not be converted to weth
     */
     function amountDaiInPortfolio(uint amountDai, address daiAddress) public view returns (uint) {
-        return amountDai.percent(daiShare(daiAddress));
+        return amountDai.percent(daiShare());
     }
 
-    function daiShare(address daiAddress) public view returns (uint16 share) {
+    function daiShare() public view returns (uint16 share) {
         share = 0;
         for(uint i = 0; i < shares.length; ++i) {
-            if(shares[i].tokenAddress == daiAddress) {
+            if(shares[i].tokenAddress == RibeUtils.getDaiAddress()) {
                 share = shares[i].share;
                 break;
             }
