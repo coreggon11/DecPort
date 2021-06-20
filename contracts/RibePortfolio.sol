@@ -32,25 +32,25 @@ contract RibePortfolio is Ownable {
         }
     }
 
-    function investDai(address investor, uint amountDai, uint wethTransferred)
+    function investDai(address investor, uint amountDai, uint wethTransferred, uint deadline)
         external allowedInvestor(investor) {
         if(isDynamic) {
-            investDaiDynamic(investor, amountDai, wethTransferred);
+            investDaiDynamic(investor, amountDai, wethTransferred, deadline);
         } else {
-            investDaiStatic(investor, amountDai, wethTransferred);
+            investDaiStatic(investor, amountDai, wethTransferred, deadline);
         }
     }
 
-    function investWeth(address investor, uint wethTransferred) 
+    function investWeth(address investor, uint wethTransferred, uint deadline) 
         external allowedInvestor(investor) {
         if(isDynamic) {
-            investWethDynamic(investor, wethTransferred);
+            investWethDynamic(investor, wethTransferred, deadline);
         } else {
-            investWethStatic(investor, wethTransferred);
+            investWethStatic(investor, wethTransferred, deadline);
         }
     }
 
-    function investDaiStatic(address investor, uint amountDai, uint wethTransferred) private {
+    function investDaiStatic(address investor, uint amountDai, uint wethTransferred, uint deadline) private {
         // dai is already here, we don't need to convert
         uint sharesWithoutDai = RibeUtils.sub(10000, daiShare());
         uint wethLeft = wethTransferred;
@@ -66,22 +66,29 @@ contract RibePortfolio is Ownable {
                 // we do not need to swap weth obviously
                 continue;
             }
-            // TODO swap weth to token
+            // how much token do I get for weth
+            // swap dai to weth
+            IUniswapV2Router01(RibeUtils.getRouterAddress())
+                .swapExactTokensForTokens(wethToSwap, 
+                    RibeUtils.getMinTokenForEthWithSlippage(wethToSwap, shares[i].tokenAddress), 
+                    RibeUtils.getWethTokenPath(shares[i].tokenAddress), 
+                    address(this), 
+                    deadline);
         }
         // TODO mint tokens
         // TODO send tokens to investor
         // TODO send tokens to contract owner
     }
 
-    function investDaiDynamic(address investor, uint amountDai, uint wethTransferred) private {
+    function investDaiDynamic(address investor, uint amountDai, uint wethTransferred, uint deadline) private {
         // TODO
     }
 
-    function investWethStatic(address investor, uint wethTransferred) private {
+    function investWethStatic(address investor, uint wethTransferred, uint deadline) private {
        // TODO
     }
 
-    function investWethDynamic(address investor, uint wethTransferred) private {
+    function investWethDynamic(address investor, uint wethTransferred, uint deadline) private {
        // TODO
     }
 

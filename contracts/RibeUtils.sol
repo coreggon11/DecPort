@@ -91,6 +91,13 @@ library RibeUtils {
         return path;
     }
 
+    function getWethTokenPath(address tokenTo) external pure returns (address[] memory) {
+        address[] memory path = new address[](2);
+        path[0] = getWethAddress();
+        path[1] = tokenTo;
+        return path;
+    }
+
     // how much eth I get for 1 token
     function tokenPriceEther(address tokenAddress) external view returns (uint) {
         (uint reserveToken, uint reserveWeth, ) = pairInfo(tokenAddress, getWethAddress());
@@ -106,9 +113,13 @@ library RibeUtils {
 
     // return min eth recieved for 'amountDai' dai with 1% slippage
     function getMinEthForDaiWithSlippage(uint amountDai) external view returns (uint) {
-        (uint reserveDai, uint reserveWeth, ) = pairInfo(getDaiAddress(), getWethAddress());
+        return getMinTokenForTokenWithSlippage(amountDai, getDaiAddress(), getWethAddress());
+    }
 
-        uint amount = UniswapV2Library.getAmountOut(amountDai, reserveDai, reserveWeth);
+    function getMinTokenForTokenWithSlippage(uint amountTokenA, address tokenA, address tokenB) internal view returns (uint) {
+        (uint reserveA, uint reserveB, ) = pairInfo(tokenA, tokenB);
+
+        uint amount = UniswapV2Library.getAmountOut(amountTokenA, reserveA, reserveB);
         if(amount == 0) {
             return 0;
         }
@@ -116,6 +127,11 @@ library RibeUtils {
         uint out = amount * perc;
         require(out / perc == amount, "Math Error: Overflow");
         return out / 10000;
+    }
+
+    // return min token 'tokenAddress' recieved for 'amountWeth' weth with 1% slippage
+    function getMinTokenForEthWithSlippage(uint amountWeth, address tokenAddress) external view returns (uint) {
+        return getMinTokenForTokenWithSlippage(amountWeth, getWethAddress(), tokenAddress);
     }
 
 }

@@ -84,9 +84,9 @@ contract RibeProtcol {
         // now call invest over portfolio
         if(portfolio.daiShare() == 0) {
             // if no dai is in portfolio then invest weth
-            portfolio.investWeth(msg.sender, wethTransferred);
+            portfolio.investWeth(msg.sender, wethTransferred, deadline);
         } else {
-            portfolio.investDai(msg.sender, taxedDaiAmount, wethTransferred);
+            portfolio.investDai(msg.sender, taxedDaiAmount, wethTransferred, deadline);
         }
     }
 
