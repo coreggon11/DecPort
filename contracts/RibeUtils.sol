@@ -98,11 +98,16 @@ library RibeUtils {
         return path;
     }
 
-    // how much eth I get for 1 token
-    function tokenPriceEther(address tokenAddress) external view returns (uint) {
+    // how much eth I get for 'amount' token
+    function tokenPriceEther(address tokenAddress, uint amount) external view returns (uint) {
         (uint reserveToken, uint reserveWeth, ) = pairInfo(tokenAddress, getWethAddress());
-        ERC20 theToken = ERC20(tokenAddress);
-        return UniswapV2Library.getAmountOut(10 ** theToken.decimals(), reserveToken, reserveWeth);
+        return UniswapV2Library.getAmountOut(amount, reserveToken, reserveWeth);
+    }
+
+    // how much dai I get for 'amountWeth' weth
+    function etherPriceDai(uint amountWeth) external view returns (uint) {
+        (uint reserveDai, uint reserveWeth, ) = pairInfo(getDaiAddress(), getWethAddress());
+        return UniswapV2Library.getAmountOut(amountWeth, reserveWeth, reserveDai);
     }
 
     // return ether price in usdt

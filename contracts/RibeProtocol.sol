@@ -18,10 +18,12 @@ contract RibeProtcol {
         devAddress = msg.sender;        
     }
 
-    function createPortfolio(bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_) public {
+    function createPortfolio(string memory portfolioName, bool isPublic_, bool isDynamic_, address[] memory addresses_, uint16[] memory shares_) public {
         require(shares_.length == addresses_.length, "Ribe Protocol : Number of tokens does not match number of shares!");
         require(shares_.uint16ArraySum() == 10000, "Ribe Protocol : Total shares must be 100%!");
-        portfolios[msg.sender].push(new RibePortfolio(isPublic_, isDynamic_, addresses_, shares_));
+        RibePortfolio portfolio = new RibePortfolio(msg.sender, portfolioName, isPublic_, isDynamic_, addresses_, shares_);
+        portfolio.transferOwnership(msg.sender);
+        portfolios[msg.sender].push(portfolio);
         ++portfolioCount;
     }
 
@@ -84,7 +86,7 @@ contract RibeProtcol {
         // now call invest over portfolio
         if(portfolio.daiShare() == 0) {
             // if no dai is in portfolio then invest weth
-            portfolio.investWeth(msg.sender, wethTransferred, deadline);
+            portfolio.investWeth(msg.sender, taxedDaiAmount, wethTransferred, deadline);
         } else {
             portfolio.investDai(msg.sender, taxedDaiAmount, wethTransferred, deadline);
         }
